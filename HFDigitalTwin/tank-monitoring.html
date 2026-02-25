@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>罐区监控 - 华峰石化数字孪生平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* 罐区监控页面特定样式 */
+        .monitoring-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--spacing-lg);
+            height: calc(100vh - var(--header-height) - 80px);
+        }
+        
+        .monitoring-sidebar {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .sidebar-section {
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .sidebar-section:last-child {
+            border-bottom: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .sidebar-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-sm);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .tank-select {
+            width: 100%;
+            padding: var(--spacing-sm);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        .tank-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .device-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+        }
+        
+        .device-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid transparent;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+        
+        .device-item:hover {
+            background: rgba(0, 212, 255, 0.08);
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+        
+        .device-item.selected {
+            background: rgba(0, 212, 255, 0.12);
+            border-color: var(--primary-color);
+        }
+        
+        .device-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            background: rgba(0, 212, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+        
+        .device-name {
+            flex: 1;
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+        }
+        
+        .device-value {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            font-weight: 500;
+        }
+        
+        .device-value.normal { color: var(--success-color); }
+        .device-value.warning { color: var(--warning-color); }
+        .device-value.danger { color: var(--danger-color); }
+        
+        /* 3D视图区 */
+        .monitoring-main {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        
+        .view-3d-container {
+            flex: 1;
+            min-height: 400px;
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(10, 14, 23, 0.98));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .view-toolbar {
+            position: absolute;
+            top: var(--spacing-md);
+            left: var(--spacing-md);
+            right: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 10;
+        }
+        
+        .view-toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .view-title-badge {
+            padding: var(--spacing-xs) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .scene-canvas {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+        
+        .scene-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            transform: perspective(500px) rotateX(60deg);
+            transform-origin: center bottom;
+        }
+        
+        .scene-object {
+            position: absolute;
+            transition: all 0.5s ease;
+            cursor: pointer;
+        }
+        
+        .scene-object:hover {
+            transform: scale(1.1);
+        }
+        
+        .tank-model {
+            width: 80px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 40px 40px 20px 20px;
+            border: 2px solid;
+            transition: all 0.3s ease;
+        }
+        
+        .tank-model.normal {
+            background: linear-gradient(180deg, rgba(0, 212, 255, 0.3), rgba(0, 212, 255, 0.1));
+            border-color: rgba(0, 212, 255, 0.5);
+        }
+        
+        .tank-model.warning {
+            background: linear-gradient(180deg, rgba(255, 170, 0, 0.3), rgba(255, 170, 0, 0.1));
+            border-color: rgba(255, 170, 0, 0.5);
+        }
+        
+        .tank-model.danger {
+            background: linear-gradient(180deg, rgba(255, 71, 87, 0.3), rgba(255, 71, 87, 0.1));
+            border-color: rgba(255, 71, 87, 0.5);
+            animation: tankPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes tankPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 71, 87, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 71, 87, 0.6); }
+        }
+        
+        .tank-model-label {
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: white;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+        }
+        
+        .tank-model-value {
+            font-size: 0.5625rem;
+            font-family: var(--font-mono);
+        }
+        
+        .tank-model.normal .tank-model-value { color: var(--primary-color); }
+        .tank-model.warning .tank-model-value { color: var(--warning-color); }
+        .tank-model.danger .tank-model-value { color: var(--danger-color); }
+        
+        /* 视频面板 */
+        .video-panel {
+            position: absolute;
+            bottom: var(--spacing-md);
+            left: var(--spacing-md);
+            width: 320px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .video-panel-header {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .video-panel-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .video-live-dot {
+            width: 6px;
+            height: 6px;
+            background: var(--danger-color);
+            border-radius: 50%;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        .video-panel-content {
+            height: 180px;
+            background: var(--bg-darker);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+        
+        /* 信息面板 */
+        .info-panels {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-md);
+        }
+        
+        .info-panel {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+        
+        .info-panel-header {
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+        
+        .info-panel-body {
+            padding: var(--spacing-md);
+        }
+        
+        .data-grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-sm);
+        }
+        
+        .data-item {
+            padding: var(--spacing-sm);
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: var(--radius-md);
+        }
+        
+        .data-item-label {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+        
+        .data-item-value {
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .data-item-value.normal { color: var(--success-color); }
+        .data-item-value.warning { color: var(--warning-color); }
+        .data-item-value.danger { color: var(--danger-color); }
+        
+        /* 告警列表 */
+        .alarm-list-compact {
+            max-height: 180px;
+            overflow-y: auto;
+        }
+        
+        .alarm-item-compact {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-xs) 0;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.75rem;
+        }
+        
+        .alarm-item-compact:last-child {
+            border-bottom: none;
+        }
+        
+        .alarm-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .alarm-dot.danger { background: var(--danger-color); }
+        .alarm-dot.warning { background: var(--warning-color); }
+        
+        .alarm-text {
+            flex: 1;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .alarm-time {
+            color: var(--text-muted);
+            font-size: 0.625rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .monitoring-layout {
+                grid-template-columns: 1fr;
+            }
+            .monitoring-sidebar {
+                max-height: 300px;
+            }
+            .info-panels {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-name">华峰石化</div>
+                    <div class="sidebar-brand-desc">数字孪生平台</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">主菜单</div>
+                    <a href="index.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">首页</span>
+                    </a>
+                    <a href="tank-monitoring.html" class="sidebar-nav-item active">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">罐区监控</span>
+                    </a>
+                    <a href="equipment.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">设备管理</span>
+                    </a>
+                    <a href="video.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">视频监控</span>
+                    </a>
+                    <a href="roaming.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                        </svg>
+                        <span class="sidebar-nav-text">实景漫游</span>
+                    </a>
+                    <a href="analysis.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据分析</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">可视化</div>
+                    <a href="dashboard.html" class="sidebar-nav-item" target="_blank">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据大屏</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">系统</div>
+                    <a href="settings.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span class="sidebar-nav-text">系统设置</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-nav-item" onclick="App.auth.logout()" style="cursor: pointer;">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span class="sidebar-nav-text">退出登录</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="app-main">
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="header-toggle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="header-breadcrumb">
+                        <span class="header-breadcrumb-item">首页</span>
+                        <span class="header-breadcrumb-sep">/</span>
+                        <span class="header-breadcrumb-item active">罐区监控</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-time" id="currentTime">2026-02-24 11:34:35</div>
+                    <div class="header-status">
+                        <span class="header-status-dot"></span>
+                        系统运行正常
+                    </div>
+                    <div class="header-actions">
+                        <button class="icon-btn" title="全屏">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 3 21 3 21 9"/>
+                                <polyline points="9 21 3 21 3 15"/>
+                                <line x1="21" y1="3" x2="14" y2="10"/>
+                                <line x1="3" y1="21" x2="10" y2="14"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="header-user">
+                        <div class="header-user-avatar">A</div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">罐区监控</h1>
+                        <p class="page-subtitle">3D数字孪生罐区实时监控</p>
+                    </div>
+                </div>
+                
+                <div class="monitoring-layout">
+                    <!-- 左侧边栏 -->
+                    <div class="monitoring-sidebar">
+                        <div class="sidebar-section">
+                            <div class="sidebar-title">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                </svg>
+                                选择罐区
+                            </div>
+                            <select class="tank-select">
+                                <option value="324">324 液态烃中间球罐组</option>
+                                <option value="325">325 液态烃球罐组</option>
+                                <option value="303">303 中间罐组（二）</option>
+                            </select>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <div class="sidebar-title">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                </svg>
+                                设备列表
+                            </div>
+                            <div class="device-list">
+                                <div class="device-item selected">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">球罐 A-001</span>
+                                    <span class="device-value normal">0.72</span>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">球罐 A-002</span>
+                                    <span class="device-value warning">0.85</span>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">球罐 A-003</span>
+                                    <span class="device-value normal">0.68</span>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                    </div>
+<span class="device-name">球罐 A-004</span>
+                                    <span class="device-value normal">0.71</span>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">球罐 A-005</span>
+                                    <span class="device-value danger">1.15</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="sidebar-section">
+                            <div class="sidebar-title">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                                </svg>
+                                温度传感器
+                            </div>
+                            <div class="device-list">
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">温度 S-001</span>
+                                    <span class="device-value normal">28.5℃</span>
+                                </div>
+                                <div class="device-item">
+                                    <div class="device-icon">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 14.76V3.5a2.5 2.5 0 0 0-5 0v11.26a4.5 4.5 0 1 0 5 0z"/>
+                                        </svg>
+                                    </div>
+                                    <span class="device-name">温度 S-002</span>
+                                    <span class="device-value warning">52℃</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 主视图区 -->
+                    <div class="monitoring-main">
+                        <!-- 3D视图 -->
+                        <div class="view-3d-container">
+                            <div class="view-toolbar">
+                                <div class="view-toolbar-left">
+                                    <div class="view-title-badge">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                                        </svg>
+                                        324 液态烃中间球罐组
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 8px;">
+                                    <button class="view-btn active">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="10"/>
+                                        </svg>
+                                        自动巡检
+                                    </button>
+                                    <button class="view-btn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <circle cx="12" cy="12" r="3"/>
+                                        </svg>
+                                        视角
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="scene-canvas">
+                                <div class="scene-grid"></div>
+                                
+                                <!-- 3D球罐模型 -->
+                                <div class="scene-object" style="top: 30%; left: 20%;">
+                                    <div class="tank-model normal">
+                                        <span class="tank-model-label">A-001</span>
+                                        <span class="tank-model-value">0.72 MPa</span>
+                                    </div>
+                                </div>
+                                <div class="scene-object" style="top: 30%; left: 40%;">
+                                    <div class="tank-model warning">
+                                        <span class="tank-model-label">A-002</span>
+                                        <span class="tank-model-value">0.85 MPa</span>
+                                    </div>
+                                </div>
+                                <div class="scene-object" style="top: 30%; left: 60%;">
+                                    <div class="tank-model normal">
+                                        <span class="tank-model-label">A-003</span>
+                                        <span class="tank-model-value">0.68 MPa</span>
+                                    </div>
+                                </div>
+                                <div class="scene-object" style="top: 55%; left: 30%;">
+                                    <div class="tank-model normal">
+                                        <span class="tank-model-label">A-004</span>
+                                        <span class="tank-model-value">0.71 MPa</span>
+                                    </div>
+                                </div>
+                                <div class="scene-object" style="top: 55%; left: 50%;">
+                                    <div class="tank-model danger">
+                                        <span class="tank-model-label">A-005</span>
+                                        <span class="tank-model-value">1.15 MPa</span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 设备标记 -->
+                                <div class="equipment-marker" style="top: 25%; left: 70%;"></div>
+                                <div class="equipment-marker warning" style="top: 40%; left: 75%;"></div>
+                                <div class="equipment-marker" style="top: 65%; left: 40%;"></div>
+                                
+                                <!-- 视频面板 -->
+                                <div class="video-panel">
+                                    <div class="video-panel-header">
+                                        <div class="video-panel-title">
+                                            <span class="video-live-dot"></span>
+                                            实时视频
+                                        </div>
+                                        <button class="view-btn" style="padding: 2px 8px; font-size: 10px;">切换</button>
+                                    </div>
+                                    <div class="video-panel-content">
+                                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                            <polygon points="23 7 16 12 23 17 23 7"/>
+                                            <rect x="1" y="5" width="15" height="14" rx="2"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 信息面板 -->
+                        <div class="info-panels">
+                            <div class="info-panel">
+                                <div class="info-panel-header">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <path d="M12 6v6l4 2"/>
+                                    </svg>
+                                    实时数据 - 球罐 A-001
+                                </div>
+                                <div class="info-panel-body">
+                                    <div class="data-grid-2">
+                                        <div class="data-item">
+                                            <div class="data-item-label">压力 (MPa)</div>
+                                            <div class="data-item-value normal">0.72</div>
+                                        </div>
+                                        <div class="data-item">
+                                            <div class="data-item-label">温度 (℃)</div>
+                                            <div class="data-item-value normal">28.5</div>
+                                        </div>
+                                        <div class="data-item">
+                                            <div class="data-item-label">液位 (%)</div>
+                                            <div class="data-item-value normal">72.4</div>
+                                        </div>
+                                        <div class="data-item">
+                                            <div class="data-item-label">储量 (吨)</div>
+                                            <div class="data-item-value normal">1,850</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-panel">
+                                <div class="info-panel-header">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                    </svg>
+                                    24小时趋势
+                                </div>
+                                <div class="info-panel-body">
+                                    <div class="chart-wrapper sm" id="miniChart"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="info-panel">
+                                <div class="info-panel-header">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                                    </svg>
+                                    实时告警
+                                </div>
+                                <div class="info-panel-body no-padding">
+                                    <div class="alarm-list-compact" style="padding: 12px;">
+                                        <div class="alarm-item-compact">
+                                            <span class="alarm-dot danger"></span>
+                                            <span class="alarm-text">球罐 A-005 压力超限</span>
+                                            <span class="alarm-time">11:25</span>
+                                        </div>
+                                        <div class="alarm-item-compact">
+                                            <span class="alarm-dot warning"></span>
+                                            <span class="alarm-text">传感器 S-002 温度异常</span>
+                                            <span class="alarm-time">10:48</span>
+                                        </div>
+                                        <div class="alarm-item-compact">
+                                            <span class="alarm-dot warning"></span>
+                                            <span class="alarm-text">球罐 A-002 通信中断</span>
+                                            <span class="alarm-time">09:15</span>
+                                        </div>
+                                        <div class="alarm-item-compact">
+                                            <span class="alarm-dot warning"></span>
+                                            <span class="alarm-text">球罐 A-003 液位低</span>
+                                            <span class="alarm-time">08:30</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 迷你图表
+            const miniChart = document.getElementById('miniChart');
+            if (miniChart) {
+                App.charts.createLineChart(miniChart, {}, {
+                    labels: ['00', '04', '08', '12', '16', '20', '24'],
+                    datasets: [{
+                        label: '压力',
+                        data: [0.68, 0.70, 0.72, 0.75, 0.73, 0.71, 0.72]
+                    }],
+                    colors: ['#00d4ff'],
+                    showGrid: false,
+                    showPoints: false
+                });
+            }
+            
+            // 设备列表点击
+            document.querySelectorAll('.device-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.device-item').forEach(i => i.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+            
+            // 3D对象点击
+            document.querySelectorAll('.scene-object').forEach(obj => {
+                obj.addEventListener('click', function() {
+                    App.modal.open('deviceModal');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

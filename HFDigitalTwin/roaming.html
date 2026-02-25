@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>罐区漫游 - 华峰石化数字孪生平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        /* 罐区漫游页面特定样式 */
+        .roaming-layout {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: var(--spacing-lg);
+            height: calc(100vh - var(--header-height) - 80px);
+        }
+
+        /* 漫游控制面板 */
+        .roaming-control-panel {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            padding: var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .panel-title svg {
+            color: var(--primary-color);
+        }
+
+        .panel-body {
+            padding: var(--spacing-lg);
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* 漫游模式选择 */
+        .mode-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .mode-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .mode-cards {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .mode-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .mode-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .mode-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .mode-card.active {
+            border-color: var(--primary-color);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .mode-card.active::before {
+            opacity: 1;
+        }
+
+        .mode-card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .mode-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--primary-color);
+        }
+
+        .mode-name {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .mode-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .mode-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.625rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-full);
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--primary-color);
+            margin-top: var(--spacing-sm);
+        }
+
+        .mode-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--primary-color);
+        }
+
+        /* 漫游控制按钮 */
+        .control-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .control-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .control-btn {
+            width: 100%;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--spacing-sm);
+        }
+
+        .control-btn.primary {
+            background: linear-gradient(135deg, var(--primary-color), #0099cc);
+            color: white;
+        }
+
+        .control-btn.primary:hover {
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .control-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .control-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--primary-color);
+        }
+
+        .control-btn.danger {
+            background: rgba(255, 71, 87, 0.15);
+            color: var(--danger-color);
+            border: 1px solid rgba(255, 71, 87, 0.3);
+        }
+
+        .control-btn.danger:hover {
+            background: rgba(255, 71, 87, 0.25);
+        }
+
+        /* 视角预设 */
+        .viewpoint-section {
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .viewpoint-list {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+
+        .viewpoint-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-normal);
+        }
+
+        .viewpoint-item:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .viewpoint-item.active {
+            border-color: var(--primary-color);
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .viewpoint-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--primary-color);
+        }
+
+        .viewpoint-name {
+            flex: 1;
+            font-size: 0.8125rem;
+            color: var(--text-primary);
+        }
+
+        .viewpoint-check {
+            color: var(--primary-color);
+            opacity: 0;
+            transition: opacity var(--transition-normal);
+        }
+
+        .viewpoint-item.active .viewpoint-check {
+            opacity: 1;
+        }
+
+        /* 速度控制 */
+        .speed-section {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .speed-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            min-width: 40px;
+        }
+
+        .speed-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: var(--radius-full);
+            outline: none;
+        }
+
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 212, 255, 0.4);
+        }
+
+        .speed-value {
+            font-size: 0.75rem;
+            font-family: var(--font-mono);
+            color: var(--primary-color);
+            min-width: 35px;
+            text-align: right;
+        }
+
+        /* 3D视图区域 */
+        .roaming-viewer {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .viewer-header {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .viewer-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .viewer-title svg {
+            color: var(--primary-color);
+        }
+
+        .viewer-status {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .viewer-status-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-full);
+        }
+
+        .viewer-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .viewer-status-dot.online {
+            background: var(--success-color);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .viewer-content {
+            flex: 1;
+            position: relative;
+            background: #0a0e17;
+        }
+
+        /* 3D GS模型容器 */
+        #gs-viewer {
+            width: 100%;
+            height: 100%;
+            position: relative;
+        }
+
+        #gs-viewer iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* 加载状态 */
+        .viewer-loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: var(--spacing-md);
+            z-index: 10;
+        }
+
+        .loading-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(0, 212, 255, 0.2);
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+
+        /* 视角信息 */
+        .view-info {
+            position: absolute;
+            bottom: var(--spacing-lg);
+            left: var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md) var(--spacing-lg);
+            z-index: 5;
+        }
+
+        .view-info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .view-info-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .view-info-label {
+            color: var(--text-muted);
+        }
+
+        .view-info-value {
+            font-family: var(--font-mono);
+            color: var(--primary-color);
+        }
+
+        /* 控制提示 */
+        .control-hints {
+            position: absolute;
+            bottom: var(--spacing-lg);
+            right: var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-md) var(--spacing-lg);
+            z-index: 5;
+        }
+
+        .control-hints-title {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .control-hint-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .control-hint-key {
+            padding: 2px 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            font-size: 0.625rem;
+            color: var(--text-primary);
+        }
+
+        /* 导航覆盖层 */
+        .nav-overlay {
+            position: absolute;
+            bottom: var(--spacing-lg);
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: var(--spacing-sm);
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-full);
+            padding: var(--spacing-xs);
+            z-index: 5;
+        }
+
+        .nav-overlay-btn {
+            padding: var(--spacing-sm) var(--spacing-lg);
+            border: none;
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: var(--radius-full);
+            transition: all var(--transition-normal);
+        }
+
+        .nav-overlay-btn:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-overlay-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .roaming-layout {
+                grid-template-columns: 1fr;
+            }
+            
+            .roaming-control-panel {
+                max-height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-name">华峰石化</div>
+                    <div class="sidebar-brand-desc">数字孪生平台</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">主菜单</div>
+                    <a href="index.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">首页</span>
+                    </a>
+                    <a href="tank-monitoring.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">罐区监控</span>
+                    </a>
+                    <a href="equipment.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">设备管理</span>
+                    </a>
+                    <a href="video.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">视频监控</span>
+                    </a>
+                    <a href="roaming.html" class="sidebar-nav-item active">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                        </svg>
+                        <span class="sidebar-nav-text">实景漫游</span>
+                    </a>
+                    <a href="analysis.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据分析</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">可视化</div>
+                    <a href="dashboard.html" class="sidebar-nav-item" target="_blank">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据大屏</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">系统</div>
+                    <a href="settings.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span class="sidebar-nav-text">系统设置</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-nav-item" onclick="App.auth.logout()" style="cursor: pointer;">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span class="sidebar-nav-text">退出登录</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="app-main">
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="header-toggle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="header-breadcrumb">
+                        <span class="header-breadcrumb-item">首页</span>
+                        <span class="header-breadcrumb-sep">/</span>
+                        <span class="header-breadcrumb-item active">罐区漫游</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-time" id="currentTime">2026-02-24 11:34:35</div>
+                    <div class="header-status">
+                        <span class="header-status-dot"></span>
+                        <span>系统正常</span>
+                    </div>
+                    <div class="header-user">
+                        <div class="header-user-avatar">管</div>
+                        <span class="header-user-name">管理员</span>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="app-content">
+                <!-- 漫游布局 -->
+                <div class="roaming-layout">
+                    <!-- 左侧控制面板 -->
+                    <div class="roaming-control-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                                </svg>
+                                漫游控制
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <!-- 漫游模式 -->
+                            <div class="mode-section">
+                                <div class="mode-section-title">漫游模式</div>
+                                <div class="mode-cards">
+                                    <div class="mode-card active" data-mode="aerial" onclick="RoamingApp.setMode('aerial')">
+                                        <div class="mode-card-header">
+                                            <div class="mode-icon">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                                    <path d="M2 17l10 5 10-5"/>
+                                                    <path d="M2 12l10 5 10-5"/>
+                                                </svg>
+                                            </div>
+                                            <div class="mode-name">空中鸟瞰</div>
+                                        </div>
+                                        <div class="mode-desc">从高空俯瞰整个罐区，了解园区整体布局和设备分布</div>
+                                        <div class="mode-status">
+                                            <span class="mode-status-dot"></span>
+                                            推荐
+                                        </div>
+                                    </div>
+                                    <div class="mode-card" data-mode="ground" onclick="RoamingApp.setMode('ground')">
+                                        <div class="mode-card-header">
+                                            <div class="mode-icon">
+                                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                    <circle cx="12" cy="5" r="3"/>
+                                                    <line x1="12" y1="22" x2="12" y2="8"/>
+                                                    <path d="M5 12H2a10 10 0 0 0 20 0h-3"/>
+                                                </svg>
+                                            </div>
+                                            <div class="mode-name">地面巡检</div>
+                                        </div>
+                                        <div class="mode-desc">模拟巡检人员视角，近距离观察设备运行状态和细节</div>
+                                        <div class="mode-status" style="background: rgba(0, 255, 136, 0.15); color: #00ff88;">
+                                            <span class="mode-status-dot" style="background: #00ff88;"></span>
+                                            巡检模式
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 控制按钮 -->
+                            <div class="control-section">
+                                <div class="mode-section-title">播放控制</div>
+                                <div class="control-buttons">
+                                    <button class="control-btn primary" onclick="RoamingApp.startRoaming()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <polygon points="5 3 19 12 5 21 5 3"/>
+                                        </svg>
+                                        开始漫游
+                                    </button>
+                                    <button class="control-btn secondary" onclick="RoamingApp.pauseRoaming()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="6" y="4" width="4" height="16"/>
+                                            <rect x="14" y="4" width="4" height="16"/>
+                                        </svg>
+                                        暂停
+                                    </button>
+                                    <button class="control-btn danger" onclick="RoamingApp.stopRoaming()">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                                        </svg>
+                                        停止
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 视角预设 -->
+                            <div class="viewpoint-section">
+                                <div class="mode-section-title">快速视角</div>
+                                <div class="viewpoint-list">
+                                    <div class="viewpoint-item active" data-view="overview" onclick="RoamingApp.setViewpoint('overview')">
+                                        <div class="viewpoint-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                                            </svg>
+                                        </div>
+                                        <span class="viewpoint-name">全概览</span>
+                                        <svg class="viewpoint-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="viewpoint-item" data-view="tank324" onclick="RoamingApp.setViewpoint('tank324')">
+                                        <div class="viewpoint-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                            </svg>
+                                        </div>
+                                        <span class="viewpoint-name">324罐区</span>
+                                        <svg class="viewpoint-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="viewpoint-item" data-view="tank325" onclick="RoamingApp.setViewpoint('tank325')">
+                                        <div class="viewpoint-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                            </svg>
+                                        </div>
+                                        <span class="viewpoint-name">325罐区</span>
+                                        <svg class="viewpoint-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="viewpoint-item" data-view="tank303" onclick="RoamingApp.setViewpoint('tank303')">
+                                        <div class="viewpoint-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <circle cx="12" cy="12" r="10"/>
+                                            </svg>
+                                        </div>
+                                        <span class="viewpoint-name">303罐区</span>
+                                        <svg class="viewpoint-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                    <div class="viewpoint-item" data-view="entrance" onclick="RoamingApp.setViewpoint('entrance')">
+                                        <div class="viewpoint-icon">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                            </svg>
+                                        </div>
+                                        <span class="viewpoint-name">厂区入口</span>
+                                        <svg class="viewpoint-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <polyline points="20 6 9 17 4 12"/>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 速度控制 -->
+                            <div class="speed-section">
+                                <div class="mode-section-title">漫游速度</div>
+                                <div class="speed-control">
+                                    <span class="speed-label">慢</span>
+                                    <input type="range" class="speed-slider" min="1" max="10" value="5" onchange="RoamingApp.setSpeed(this.value)">
+                                    <span class="speed-value" id="speedValue">5x</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 3D视图区域 -->
+                    <div class="roaming-viewer">
+                        <div class="viewer-header">
+                            <div class="viewer-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                                </svg>
+                                罐区3D漫游视图
+                            </div>
+                            <div class="viewer-status">
+                                <div class="viewer-status-item">
+                                    <span class="viewer-status-dot online"></span>
+                                    模型加载中
+                                </div>
+                                <div class="viewer-status-item">
+                                    FPS: <span id="fpsValue">60</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="viewer-content">
+                            <!-- 加载状态 -->
+                            <div class="viewer-loading" id="viewerLoading">
+                                <div class="loading-spinner"></div>
+                                <div class="loading-text">正在加载3DGS模型...</div>
+                            </div>
+                            
+                            <!-- 3D GS模型容器 -->
+                            <div id="gs-viewer">
+                                <iframe 
+                                    src="https://gz-light.zhensheng.im/#/gaussian-splatting/huafeng-dense" 
+                                    allow="autoplay; fullscreen; vr" 
+                                    allowfullscreen
+                                    loading="lazy"
+                                    onload="RoamingApp.onModelLoad()"
+                                ></iframe>
+                            </div>
+                            
+                            <!-- 视角信息 -->
+                            <div class="view-info">
+                                <div class="view-info-item">
+                                    <span class="view-info-label">当前视角:</span>
+                                    <span class="view-info-value" id="currentView">全概览</span>
+                                </div>
+                                <div class="view-info-item">
+                                    <span class="view-info-label">漫游模式:</span>
+                                    <span class="view-info-value" id="currentMode">空中鸟瞰</span>
+                                </div>
+                                <div class="view-info-item">
+                                    <span class="view-info-label">位置:</span>
+                                    <span class="view-info-value" id="currentPosition">X: 0.00 Y: 50.00 Z: 100.00</span>
+                                </div>
+                            </div>
+                            
+                            <!-- 控制提示 -->
+                            <div class="control-hints">
+                                <div class="control-hints-title">快捷键</div>
+                                <div class="control-hint-item">
+                                    <span class="control-hint-key">空格</span>
+                                    播放/暂停
+                                </div>
+                                <div class="control-hint-item">
+                                    <span class="control-hint-key">1-5</span>
+                                    切换视角
+                                </div>
+                                <div class="control-hint-item">
+                                    <span class="control-hint-key">W/A/S/D</span>
+                                    移动视角
+                                </div>
+                            </div>
+                            
+                            <!-- 导航覆盖层 -->
+                            <div class="nav-overlay">
+                                <button class="nav-overlay-btn active" data-view="overview" onclick="RoamingApp.setViewpoint('overview')">全概览</button>
+                                <button class="nav-overlay-btn" data-view="tank324" onclick="RoamingApp.setViewpoint('tank324')">324罐区</button>
+                                <button class="nav-overlay-btn" data-view="tank325" onclick="RoamingApp.setViewpoint('tank325')">325罐区</button>
+                                <button class="nav-overlay-btn" data-view="tank303" onclick="RoamingApp.setViewpoint('tank303')">303罐区</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="js/app.js"></script>
+    <script>
+        // 罐区漫游应用
+        const RoamingApp = {
+            currentMode: 'aerial',
+            currentView: 'overview',
+            isPlaying: false,
+            speed: 5,
+            
+            // 视角预设配置
+            viewpoints: {
+                overview: { name: '全概览', position: { x: 0, y: 80, z: 120 }, target: { x: 0, y: 0, z: 0 } },
+                tank324: { name: '324罐区', position: { x: -30, y: 25, z: 40 }, target: { x: -30, y: 10, z: 0 } },
+                tank325: { name: '325罐区', position: { x: 30, y: 25, z: 40 }, target: { x: 30, y: 10, z: 0 } },
+                tank303: { name: '303罐区', position: { x: 0, y: 20, z: -40 }, target: { x: 0, y: 8, z: -40 } },
+                entrance: { name: '厂区入口', position: { x: 80, y: 5, z: 80 }, target: { x: 0, y: 5, z: 0 } }
+            },
+            
+            // 空中鸟瞰漫游路径
+            aerialPath: [
+                { position: { x: 0, y: 80, z: 120 }, target: { x: 0, y: 0, z: 0 }, duration: 8000 },
+                { position: { x: -50, y: 60, z: 80 }, target: { x: -30, y: 10, z: 0 }, duration: 6000 },
+                { position: { x: -60, y: 40, z: 0 }, target: { x: -30, y: 10, z: 0 }, duration: 6000 },
+                { position: { x: 0, y: 50, z: -60 }, target: { x: 0, y: 10, z: -30 }, duration: 8000 },
+                { position: { x: 60, y: 45, z: 0 }, target: { x: 30, y: 10, z: 0 }, duration: 6000 },
+                { position: { x: 50, y: 35, z: 60 }, target: { x: 0, y: 5, z: 0 }, duration: 6000 },
+                { position: { x: 0, y: 80, z: 120 }, target: { x: 0, y: 0, z: 0 }, duration: 8000 }
+            ],
+            
+            // 地面巡检漫游路径
+            groundPath: [
+                { position: { x: 80, y: 2, z: 80 }, target: { x: 40, y: 2, z: 40 }, duration: 10000 },
+                { position: { x: 40, y: 2, z: 40 }, target: { x: -30, y: 5, z: 0 }, duration: 12000 },
+                { position: { x: -30, y: 3, z: 0 }, target: { x: -30, y: 8, z: 0 }, duration: 8000 },
+                { position: { x: -30, y: 3, z: 30 }, target: { x: 0, y: 5, z: 30 }, duration: 8000 },
+                { position: { x: 30, y: 3, z: 30 }, target: { x: 30, y: 8, z: 0 }, duration: 8000 },
+                { position: { x: 30, y: 3, z: -30 }, target: { x: 0, y: 5, z: -30 }, duration: 8000 },
+                { position: { x: 80, y: 2, z: 80 }, target: { x: 40, y: 2, z: 40 }, duration: 10000 }
+            ],
+            
+            // 初始化
+            init() {
+                this.updateTime();
+                setInterval(() => this.updateTime(), 1000);
+                
+                // 监听键盘事件
+                document.addEventListener('keydown', (e) => this.handleKeydown(e));
+            },
+            
+            // 更新时间显示
+            updateTime() {
+                const now = new Date();
+                const timeStr = now.toLocaleString('zh-CN', { 
+                    year: 'numeric', 
+                    month: '2-digit', 
+                    day: '2-digit', 
+                    hour: '2-digit', 
+                    minute: '2-digit', 
+                    second: '2-digit' 
+                });
+                document.getElementById('currentTime').textContent = timeStr.replace(/\//g, '-');
+            },
+            
+            // 模型加载完成
+            onModelLoad() {
+                const loading = document.getElementById('viewerLoading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+                
+                // 更新状态
+                const statusItems = document.querySelectorAll('.viewer-status-item');
+                if (statusItems[0]) {
+                    statusItems[0].innerHTML = '<span class="viewer-status-dot online"></span>模型已加载';
+                }
+            },
+            
+            // 设置漫游模式
+            setMode(mode) {
+                this.currentMode = mode;
+                
+                // 更新模式卡片状态
+                document.querySelectorAll('.mode-card').forEach(card => {
+                    card.classList.remove('active');
+                    if (card.dataset.mode === mode) {
+                        card.classList.add('active');
+                    }
+                });
+                
+                // 更新视角信息
+                document.getElementById('currentMode').textContent = mode === 'aerial' ? '空中鸟瞰' : '地面巡检';
+                
+                // 如果正在播放，停止并重新开始
+                if (this.isPlaying) {
+                    this.stopRoaming();
+                    this.startRoaming();
+                }
+            },
+            
+            // 设置视角
+            setViewpoint(view) {
+                this.currentView = view;
+                const viewpoint = this.viewpoints[view];
+                
+                if (!viewpoint) return;
+                
+                // 更新视角列表状态
+                document.querySelectorAll('.viewpoint-item').forEach(item => {
+                    item.classList.remove('active');
+                    if (item.dataset.view === view) {
+                        item.classList.add('active');
+                    }
+                });
+                
+                // 更新导航覆盖层状态
+                document.querySelectorAll('.nav-overlay-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.view === view) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                // 更新视角信息
+                document.getElementById('currentView').textContent = viewpoint.name;
+                document.getElementById('currentPosition').textContent = 
+                    `X: ${viewpoint.position.x.toFixed(2)} Y: ${viewpoint.position.y.toFixed(2)} Z: ${viewpoint.position.z.toFixed(2)}`;
+                
+                // 通知3D模型跳转到指定视角
+                this.navigateTo(viewpoint);
+            },
+            
+            // 导航到指定视角
+            navigateTo(viewpoint) {
+                // 这里可以与3DGS模型进行交互
+                // 通过postMessage与iframe通信
+                const iframe = document.querySelector('#gs-viewer iframe');
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        iframe.contentWindow.postMessage({
+                            type: 'navigate',
+                            position: viewpoint.position,
+                            target: viewpoint.target
+                        }, '*');
+                    } catch (e) {
+                        console.log('无法与3D模型通信:', e);
+                    }
+                }
+            },
+            
+            // 开始漫游
+            startRoaming() {
+                this.isPlaying = true;
+                const path = this.currentMode === 'aerial' ? this.aerialPath : this.groundPath;
+                
+                // 模拟漫游动画
+                this.animatePath(path, 0);
+            },
+            
+            // 动画路径
+            animatePath(path, index) {
+                if (!this.isPlaying || index >= path.length) {
+                    if (this.isPlaying) {
+                        this.animatePath(path, 0);
+                    }
+                    return;
+                }
+                
+                const waypoint = path[index];
+                this.navigateTo({ position: waypoint.position, target: waypoint.target });
+                
+                // 计算实际动画时间（考虑速度）
+                const duration = (waypoint.duration / this.speed) * 1000;
+                
+                // 更新位置显示
+                document.getElementById('currentPosition').textContent = 
+                    `X: ${waypoint.position.x.toFixed(2)} Y: ${waypoint.position.y.toFixed(2)} Z: ${waypoint.position.z.toFixed(2)}`;
+                
+                setTimeout(() => {
+                    this.animatePath(path, index + 1);
+                }, duration);
+            },
+            
+            // 暂停漫游
+            pauseRoaming() {
+                this.isPlaying = false;
+            },
+            
+            // 停止漫游
+            stopRoaming() {
+                this.isPlaying = false;
+                
+                // 恢复到默认视角
+                this.setViewpoint('overview');
+            },
+            
+            // 设置速度
+            setSpeed(value) {
+                this.speed = parseInt(value);
+                document.getElementById('speedValue').textContent = value + 'x';
+            },
+            
+            // 处理键盘事件
+            handleKeydown(e) {
+                switch(e.key) {
+                    case ' ':
+                        e.preventDefault();
+                        if (this.isPlaying) {
+                            this.pauseRoaming();
+                        } else {
+                            this.startRoaming();
+                        }
+                        break;
+                    case '1':
+                        this.setViewpoint('overview');
+                        break;
+                    case '2':
+                        this.setViewpoint('tank324');
+                        break;
+                    case '3':
+                        this.setViewpoint('tank325');
+                        break;
+                    case '4':
+                        this.setViewpoint('tank303');
+                        break;
+                    case '5':
+                        this.setViewpoint('entrance');
+                        break;
+                }
+            }
+        };
+        
+        // 初始化应用
+        document.addEventListener('DOMContentLoaded', () => {
+            RoamingApp.init();
+        });
+    </script>
+</body>
+</html>

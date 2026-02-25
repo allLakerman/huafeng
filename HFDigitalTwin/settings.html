@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统设置 - 华峰石化数字孪生平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+    <style>
+        .settings-layout {
+            display: grid;
+            grid-template-columns: 220px 1fr;
+            gap: var(--spacing-lg);
+        }
+        
+        .settings-nav {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-md);
+            height: fit-content;
+        }
+        
+        .settings-nav-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .settings-nav-item:hover {
+            background: rgba(0, 212, 255, 0.08);
+            color: var(--text-primary);
+        }
+        
+        .settings-nav-item.active {
+            background: rgba(0, 212, 255, 0.15);
+            color: var(--primary-color);
+        }
+        
+        .settings-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        
+        .settings-section {
+            background: linear-gradient(135deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+        
+        .settings-section-header {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .settings-section-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .settings-section-body {
+            padding: var(--spacing-lg);
+        }
+        
+        .settings-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            margin-bottom: var(--spacing-sm);
+            transition: all var(--transition-fast);
+        }
+        
+        .settings-item:hover {
+            border-color: rgba(0, 212, 255, 0.2);
+        }
+        
+        .settings-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .settings-item-info {
+            flex: 1;
+        }
+        
+        .settings-item-title {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .settings-item-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .settings-item-action {
+            flex-shrink: 0;
+        }
+        
+        /* 用户管理表格 */
+        .user-table {
+            width: 100%;
+        }
+        
+        .user-row {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .user-row:last-child {
+            border-bottom: none;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: var(--bg-dark);
+            margin-right: var(--spacing-md);
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        
+        .user-email {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .user-role {
+            padding: 4px 10px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: var(--radius-full);
+            font-size: 0.6875rem;
+            color: var(--primary-color);
+            margin-right: var(--spacing-md);
+        }
+        
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-right: var(--spacing-md);
+        }
+        
+        .user-status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .user-status-dot.active { background: var(--success-color); }
+        .user-status-dot.inactive { background: var(--text-muted); }
+        
+        /* 表单样式 */
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-md);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-group {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238b9dc3' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+        }
+        
+        .form-textarea {
+            width: 100%;
+            min-height: 100px;
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            color: var(--text-primary);
+            font-size: 0.875rem;
+            resize: vertical;
+            font-family: inherit;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: var(--spacing-sm);
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+        }
+        
+        @media (max-width: 1024px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+            }
+            .settings-nav {
+                display: flex;
+                overflow-x: auto;
+                padding: var(--spacing-sm);
+            }
+            .settings-nav-item {
+                white-space: nowrap;
+                margin-bottom: 0;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-logo">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div class="sidebar-brand">
+                    <div class="sidebar-brand-name">华峰石化</div>
+                    <div class="sidebar-brand-desc">数字孪生平台</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">主菜单</div>
+                    <a href="index.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">首页</span>
+                    </a>
+                    <a href="tank-monitoring.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                        </svg>
+                        <span class="sidebar-nav-text">罐区监控</span>
+                    </a>
+                    <a href="equipment.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="4" y="4" width="16" height="16" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">设备管理</span>
+                    </a>
+                    <a href="video.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="23 7 16 12 23 17 23 7"/>
+                            <rect x="1" y="5" width="15" height="14" rx="2"/>
+                        </svg>
+                        <span class="sidebar-nav-text">视频监控</span>
+                    </a>
+                    <a href="roaming.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+                        </svg>
+                        <span class="sidebar-nav-text">实景漫游</span>
+                    </a>
+                    <a href="analysis.html" class="sidebar-nav-item">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="20" x2="18" y2="10"/>
+                            <line x1="12" y1="20" x2="12" y2="4"/>
+                            <line x1="6" y1="20" x2="6" y2="14"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据分析</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">可视化</div>
+                    <a href="dashboard.html" class="sidebar-nav-item" target="_blank">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2"/>
+                            <line x1="3" y1="9" x2="21" y2="9"/>
+                            <line x1="9" y1="21" x2="9" y2="9"/>
+                        </svg>
+                        <span class="sidebar-nav-text">数据大屏</span>
+                    </a>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">系统</div>
+                    <a href="settings.html" class="sidebar-nav-item active">
+                        <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        <span class="sidebar-nav-text">系统设置</span>
+                    </a>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="sidebar-nav-item" onclick="App.auth.logout()" style="cursor: pointer;">
+                    <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16 17 21 12 16 7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    <span class="sidebar-nav-text">退出登录</span>
+                </div>
+            </div>
+        </aside>
+        
+        <!-- 主内容区 -->
+        <main class="app-main">
+            <header class="app-header">
+                <div class="header-left">
+                    <button class="header-toggle">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="3" y1="12" x2="21" y2="12"/>
+                            <line x1="3" y1="6" x2="21" y2="6"/>
+                            <line x1="3" y1="18" x2="21" y2="18"/>
+                        </svg>
+                    </button>
+                    <div class="header-breadcrumb">
+                        <span class="header-breadcrumb-item">首页</span>
+                        <span class="header-breadcrumb-sep">/</span>
+                        <span class="header-breadcrumb-item active">系统设置</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="header-time" id="currentTime">2026-02-24 11:34:35</div>
+                    <div class="header-status">
+                        <span class="header-status-dot"></span>
+                        系统运行正常
+                    </div>
+                    <div class="header-user">
+                        <div class="header-user-avatar">A</div>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="app-content">
+                <div class="page-header">
+                    <div>
+                        <h1 class="page-title">系统设置</h1>
+                        <p class="page-subtitle">系统配置与用户管理</p>
+                    </div>
+                </div>
+                
+                <div class="settings-layout">
+                    <!-- 设置导航 -->
+                    <div class="settings-nav">
+                        <div class="settings-nav-item active" data-tab="general">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                            基本设置
+                        </div>
+                        <div class="settings-nav-item" data-tab="users">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            用户管理
+                        </div>
+                        <div class="settings-nav-item" data-tab="alarm">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                            </svg>
+                            告警配置
+                        </div>
+                        <div class="settings-nav-item" data-tab="system">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                <line x1="8" y1="21" x2="16" y2="21"/>
+                                <line x1="12" y1="17" x2="12" y2="21"/>
+                            </svg>
+                            系统信息
+                        </div>
+                        <div class="settings-nav-item" data-tab="about">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="12" y1="16" x2="12" y2="12"/>
+                                <line x1="12" y1="8" x2="12.01" y2="8"/>
+                            </svg>
+                            关于
+                        </div>
+                    </div>
+                    
+                    <!-- 设置内容 -->
+                    <div class="settings-content">
+                        <!-- 基本设置 -->
+                        <div class="settings-section" data-section="general">
+                            <div class="settings-section-header">
+                                <div class="settings-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                    基本设置
+                                </div>
+                            </div>
+                            <div class="settings-section-body">
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">系统名称</label>
+                                        <input type="text" class="form-input" value="华峰石化数字孪生平台">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">公司名称</label>
+                                        <input type="text" class="form-input" value="华峰化学股份有限公司">
+                                    </div>
+                                </div>
+                                <div class="form-row">
+                                    <div class="form-group">
+                                        <label class="form-label">数据刷新间隔</label>
+                                        <select class="form-select">
+                                            <option>5秒</option>
+                                            <option selected>10秒</option>
+                                            <option>30秒</option>
+                                            <option>1分钟</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">时区</label>
+                                        <select class="form-select">
+                                            <option>Asia/Shanghai (GMT+8)</option>
+                                            <option>Asia/Tokyo (GMT+9)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">系统描述</label>
+                                    <textarea class="form-textarea">华峰石化数字孪生平台是一套面向石化行业的智能监控系统，通过3D可视化、传感器数据接入和视频融合技术，实现对罐区设备的实时监控和智能管理。</textarea>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn">取消</button>
+                                    <button class="btn btn-primary">保存设置</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 用户管理 -->
+                        <div class="settings-section" data-section="users">
+                            <div class="settings-section-header">
+                                <div class="settings-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="9" cy="7" r="4"/>
+                                    </svg>
+                                    用户管理
+                                </div>
+                                <button class="btn btn-sm btn-primary">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <line x1="12" y1="5" x2="12" y2="19"/>
+                                        <line x1="5" y1="12" x2="19" y2="12"/>
+                                    </svg>
+                                    添加用户
+                                </button>
+                            </div>
+                            <div class="settings-section-body no-padding">
+                                <div class="user-row">
+                                    <div class="user-avatar">管</div>
+                                    <div class="user-info">
+                                        <div class="user-name">管理员</div>
+                                        <div class="user-email">admin@huafeng.com</div>
+                                    </div>
+                                    <span class="user-role">超级管理员</span>
+                                    <div class="user-status">
+                                        <span class="user-status-dot active"></span>
+                                        在线
+                                    </div>
+                                    <button class="icon-btn sm" title="编辑">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="user-row">
+                                    <div class="user-avatar">运</div>
+                                    <div class="user-info">
+                                        <div class="user-name">运维工程师</div>
+                                        <div class="user-email">ops@huafeng.com</div>
+                                    </div>
+                                    <span class="user-role">运维人员</span>
+                                    <div class="user-status">
+                                        <span class="user-status-dot active"></span>
+                                        在线
+                                    </div>
+                                    <button class="icon-btn sm" title="编辑">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="user-row">
+                                    <div class="user-avatar">安</div>
+                                    <div class="user-info">
+                                        <div class="user-name">安全主管</div>
+                                        <div class="user-email">safety@huafeng.com</div>
+                                    </div>
+                                    <span class="user-role">安全管理员</span>
+                                    <div class="user-status">
+                                        <span class="user-status-dot inactive"></span>
+                                        离线
+                                    </div>
+                                    <button class="icon-btn sm" title="编辑">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                                <div class="user-row">
+                                    <div class="user-avatar">操</div>
+                                    <div class="user-info">
+                                        <div class="user-name">操作员</div>
+                                        <div class="user-email">operator@huafeng.com</div>
+                                    </div>
+                                    <span class="user-role">操作员</span>
+                                    <div class="user-status">
+                                        <span class="user-status-dot active"></span>
+                                        在线
+                                    </div>
+                                    <button class="icon-btn sm" title="编辑">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 告警配置 -->
+                        <div class="settings-section" data-section="alarm">
+                            <div class="settings-section-header">
+                                <div class="settings-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                                    </svg>
+                                    告警配置
+                                </div>
+                            </div>
+                            <div class="settings-section-body">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">压力告警阈值</div>
+                                        <div class="settings-item-desc">当压力超过此值时触发告警</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <input type="text" class="form-input" style="width: 120px; text-align: center;" value="1.0 MPa">
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">压力预警阈值</div>
+                                        <div class="settings-item-desc">当压力超过此值时触发预警</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <input type="text" class="form-input" style="width: 120px; text-align: center;" value="0.9 MPa">
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">温度告警阈值</div>
+                                        <div class="settings-item-desc">当温度超过此值时触发告警</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <input type="text" class="form-input" style="width: 120px; text-align: center;" value="60 ℃">
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">邮件告警通知</div>
+                                        <div class="settings-item-desc">触发告警时发送邮件通知</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <div class="toggle active"></div>
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">短信告警通知</div>
+                                        <div class="settings-item-desc">触发告警时发送短信通知</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <div class="toggle"></div>
+                                    </div>
+                                </div>
+                                <div class="form-actions">
+                                    <button class="btn btn-primary">保存配置</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 系统信息 -->
+                        <div class="settings-section" data-section="system">
+                            <div class="settings-section-header">
+                                <div class="settings-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <rect x="2" y="3" width="20" height="14" rx="2"/>
+                                    </svg>
+                                    系统信息
+                                </div>
+                            </div>
+                            <div class="settings-section-body">
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">系统版本</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <span class="font-mono">v1.0.0</span>
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">构建日期</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <span class="font-mono">2026-02-24</span>
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">运行时间</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <span class="font-mono">15天 8小时 23分钟</span>
+                                    </div>
+                                </div>
+                                <div class="settings-item">
+                                    <div class="settings-item-info">
+                                        <div class="settings-item-title">浏览器支持</div>
+                                    </div>
+                                    <div class="settings-item-action">
+                                        <span class="badge badge-success">Chrome 90+</span>
+                                        <span class="badge badge-success">Firefox 88+</span>
+                                        <span class="badge badge-success">Edge 90+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 关于 -->
+                        <div class="settings-section" data-section="about">
+                            <div class="settings-section-header">
+                                <div class="settings-section-title">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="10"/>
+                                        <line x1="12" y1="16" x2="12" y2="12"/>
+                                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                    </svg>
+                                    关于
+                                </div>
+                            </div>
+                            <div class="settings-section-body" style="text-align: center; padding: 40px;">
+                                <div style="width: 80px; height: 80px; margin: 0 auto 20px; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                                        <path d="M2 17l10 5 10-5"/>
+                                        <path d="M2 12l10 5 10-5"/>
+                                    </svg>
+                                </div>
+                                <h3 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 8px;">华峰石化数字孪生平台</h3>
+                                <p style="color: var(--text-muted); margin-bottom: 20px;">版本 v1.0.0</p>
+                                <p style="color: var(--text-secondary); max-width: 500px; margin: 0 auto; line-height: 1.6;">
+                                    融合3D可视化、物联网传感与实时监控技术，打造智能化石化生产管理平台。
+                                </p>
+                                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border-color);">
+                                    <p style="font-size: 0.75rem; color: var(--text-muted);">
+                                        © 2026 华峰化学股份有限公司 · 保留所有权利
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 设置导航点击
+            document.querySelectorAll('.settings-nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    document.querySelectorAll('.settings-nav-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const tab = this.dataset.tab;
+                    document.querySelectorAll('.settings-section').forEach(section => {
+                        section.style.display = 'none';
+                    });
+                    document.querySelector(`.settings-section[data-section="${tab}"]`).style.display = 'block';
+                });
+            });
+            
+            // 默认显示第一个设置
+            document.querySelectorAll('.settings-section').forEach((section, index) => {
+                section.style.display = index === 0 ? 'block' : 'none';
+            });
+            
+            // 开关点击
+            document.querySelectorAll('.toggle').forEach(toggle => {
+                toggle.addEventListener('click', function() {
+                    this.classList.toggle('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

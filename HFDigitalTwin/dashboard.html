@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据大屏 - 华峰石化数字孪生平台</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00d4ff;
+            --primary-dark: #0099cc;
+            --secondary: #00ff88;
+            --warning: #ffaa00;
+            --danger: #ff4757;
+            --bg: #020408;
+            --panel-bg: rgba(8, 16, 32, 0.85);
+            --border: rgba(0, 212, 255, 0.3);
+        }
+
+        body {
+            font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: #fff;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* 背景效果 */
+        .bg-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(ellipse at 50% 0%, rgba(0, 100, 150, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 100%, rgba(0, 212, 255, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .grid-lines {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+            background-size: 80px 80px;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 顶部标题栏 */
+        .header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 90px;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 90'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:rgba(0,212,255,0);stop-opacity:0' /%3E%3Cstop offset='50%25' style='stop-color:rgba(0,212,255,0.3);stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:rgba(0,212,255,0);stop-opacity:0' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0,60 Q480,90 960,60 Q1440,30 1920,60 L1920,90 L0,90 Z' fill='url(%23grad)'/%3E%3C/svg%3E") no-repeat center top;
+            background-size: 100% 100%;
+        }
+
+        .header-title {
+            margin-top: 15px;
+            font-size: 2.2rem;
+            font-weight: 700;
+            letter-spacing: 8px;
+            background: linear-gradient(180deg, #fff 0%, #00d4ff 50%, #0088aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+            position: relative;
+        }
+
+        .header-title::after {
+            content: '华峰石化数字孪生平台';
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: linear-gradient(180deg, #fff 0%, #00d4ff 50%, #0088aa 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: blur(8px);
+            opacity: 0.5;
+        }
+
+        .header-time {
+            position: absolute;
+            right: 30px;
+            top: 20px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+
+        /* 3D容器 */
+        #canvas-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+
+        /* 左侧面板 */
+        .left-panel {
+            position: absolute;
+            left: 20px;
+            top: 100px;
+            bottom: 80px;
+            width: 340px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 右侧面板 */
+        .right-panel {
+            position: absolute;
+            right: 20px;
+            top: 100px;
+            bottom: 80px;
+            width: 340px;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* 面板模块 */
+        .module {
+            background: var(--panel-bg);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .module::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--primary), transparent);
+        }
+
+        .module::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 40px;
+            border-left: 2px solid var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        .module-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .module-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
+        }
+
+        .module-body {
+            padding: 16px;
+        }
+
+        /* 统计卡片 */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .stat-card.blue::before { background: var(--primary); }
+        .stat-card.green::before { background: var(--secondary); }
+        .stat-card.orange::before { background: var(--warning); }
+        .stat-card.red::before { background: var(--danger); }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 4px;
+        }
+
+        .stat-value.blue { color: var(--primary); text-shadow: 0 0 15px rgba(0, 212, 255, 0.5); }
+        .stat-value.green { color: var(--secondary); text-shadow: 0 0 15px rgba(0, 255, 136, 0.5); }
+        .stat-value.orange { color: var(--warning); text-shadow: 0 0 15px rgba(255, 170, 0, 0.5); }
+        .stat-value.red { color: var(--danger); text-shadow: 0 0 15px rgba(255, 71, 87, 0.5); }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* 数据列表 */
+        .data-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .data-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .data-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+            border-left-color: var(--primary);
+        }
+
+        .data-item-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .data-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.875rem;
+        }
+
+        .data-icon.green { background: rgba(0, 255, 136, 0.15); color: var(--secondary); }
+        .data-icon.orange { background: rgba(255, 170, 0, 0.15); color: var(--warning); }
+        .data-icon.red { background: rgba(255, 71, 87, 0.15); color: var(--danger); }
+
+        .data-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .data-name {
+            font-size: 0.8125rem;
+            color: #fff;
+        }
+
+        .data-desc {
+            font-size: 0.6875rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .data-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .data-value.danger { color: var(--danger); }
+        .data-value.warning { color: var(--warning); }
+
+        /* 进度条 */
+        .progress-item {
+            margin-bottom: 12px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.8125rem;
+        }
+
+        .progress-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .progress-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+        }
+
+        .progress-fill.blue { background: linear-gradient(90deg, var(--primary-dark), var(--primary)); }
+        .progress-fill.green { background: linear-gradient(90deg, #00aa66, var(--secondary)); }
+        .progress-fill.orange { background: linear-gradient(90deg, #cc8800, var(--warning)); }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            z-index: 100;
+            padding: 0 60px;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 70'%3E%3Cdefs%3E%3ClinearGradient id='navGrad' x1='0%25' y1='0%25' x2='100%25' y2='0%25'%3E%3Cstop offset='0%25' style='stop-color:rgba(0,212,255,0);stop-opacity:0' /%3E%3Cstop offset='20%25' style='stop-color:rgba(0,212,255,0.2);stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:rgba(0,212,255,0.3);stop-opacity:1' /%3E%3Cstop offset='80%25' style='stop-color:rgba(0,212,255,0.2);stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:rgba(0,212,255,0);stop-opacity:0' /%3E%3C/linearGradient%3E%3C/defs%3E%3Cpath d='M0,70 L100,20 L700,20 L800,70 Z' fill='url(%23navGrad)'/%3E%3C/svg%3E") no-repeat center bottom;
+            background-size: 100% 100%;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .nav-item:hover {
+            background: rgba(0, 212, 255, 0.1);
+        }
+
+        .nav-item.active {
+            background: rgba(0, 212, 255, 0.2);
+        }
+
+        .nav-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .nav-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .nav-item.active .nav-label {
+            color: var(--primary);
+        }
+
+        /* 浮动标签 */
+        .floating-label {
+            position: absolute;
+            background: rgba(8, 16, 32, 0.95);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            padding: 12px 16px;
+            pointer-events: none;
+            z-index: 60;
+            display: none;
+        }
+
+        .floating-label.show {
+            display: block;
+        }
+
+        /* 视频监控播放器 */
+        .video-player {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .video-player-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            background: rgba(0, 212, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.15);
+        }
+
+        .video-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .video-dot.live {
+            background: var(--secondary);
+            box-shadow: 0 0 8px var(--secondary);
+            animation: pulse-dot 1.5s ease-in-out infinite;
+        }
+
+        .video-dot.offline {
+            background: #666;
+        }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(0.9); }
+        }
+
+        .video-player-name {
+            flex: 1;
+            font-size: 0.875rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+        }
+
+        .video-player-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--primary);
+        }
+
+        .video-player-screen {
+            aspect-ratio: 16 / 9;
+            position: relative;
+        }
+
+        .video-player-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0.4) 100%);
+        }
+
+        .video-player-icon {
+            font-size: 2.5rem;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        .video-player-tip {
+            font-size: 0.8125rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .video-player-content {
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-simulation {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a1a2a 0%, #051015 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-simulation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 212, 255, 0.03) 2px,
+                    rgba(0, 212, 255, 0.03) 4px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 212, 255, 0.02) 2px,
+                    rgba(0, 212, 255, 0.02) 4px
+                );
+            pointer-events: none;
+        }
+
+        .camera-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px;
+        }
+
+        .camera-corner {
+            position: absolute;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--secondary);
+            text-shadow: 0 0 5px rgba(0, 255, 136, 0.5);
+        }
+
+        .camera-tl { top: 12px; left: 12px; }
+        .camera-tr { top: 12px; right: 12px; color: var(--danger); text-shadow: 0 0 5px rgba(255, 71, 87, 0.5); }
+        .camera-bl { bottom: 12px; left: 12px; }
+        .camera-br { bottom: 12px; right: 12px; color: var(--primary); }
+
+        .camera-grid {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60%;
+            height: 60%;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        .grid-h {
+            width: 100%;
+            height: 1px;
+            top: 50%;
+        }
+
+        .grid-v {
+            width: 1px;
+            height: 100%;
+            left: 50%;
+        }
+
+        .label-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .label-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            font-size: 0.75rem;
+            margin-bottom: 4px;
+        }
+
+        .label-key {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .label-value {
+            font-family: 'JetBrains Mono', monospace;
+            color: #fff;
+        }
+
+        .label-value.danger { color: var(--danger); }
+    </style>
+</head>
+<body>
+    <div class="bg-effect"></div>
+    <div class="grid-lines"></div>
+
+    <!-- 顶部标题 -->
+    <header class="header">
+        <h1 class="header-title">华峰石化数字孪生平台</h1>
+        <div class="header-time" id="headerTime">2026-02-25 00:39:10</div>
+    </header>
+
+    <!-- 3D场景容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- 浮动标签 -->
+    <div class="floating-label" id="floatingLabel">
+        <div class="label-title">球罐 A-001</div>
+        <div class="label-row">
+            <span class="label-key">压力</span>
+            <span class="label-value">0.72 MPa</span>
+        </div>
+        <div class="label-row">
+            <span class="label-key">温度</span>
+            <span class="label-value">28.5℃</span>
+        </div>
+        <div class="label-row">
+            <span class="label-key">液位</span>
+            <span class="label-value">65.2%</span>
+        </div>
+        <div class="label-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(0,212,255,0.2);">
+            <span class="label-key" style="color: var(--primary);">👆 点击查看监控</span>
+        </div>
+    </div>
+
+    <!-- 左侧面板 -->
+    <div class="left-panel">
+        <!-- 园区信息总览 -->
+        <div class="module">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">罐区信息总览</span>
+            </div>
+            <div class="module-body">
+                <div class="stat-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-value blue">324</div>
+                        <div class="stat-label">罐区总面积(m²)</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-value green">8</div>
+                        <div class="stat-label">储罐数量</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-value orange">12</div>
+                        <div class="stat-label">监测点位</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-value red">3</div>
+                        <div class="stat-label">告警设备</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 安全监测 -->
+        <div class="module">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">安全监测指标</span>
+            </div>
+            <div class="module-body">
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">设备运行安全</span>
+                        <span class="progress-value">94.5%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill green" style="width: 94.5%"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">生产安全</span>
+                        <span class="progress-value">72.9%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill orange" style="width: 72.9%"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-header">
+                        <span class="progress-label">环境监测</span>
+                        <span class="progress-value">98.2%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill blue" style="width: 98.2%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实时告警 -->
+        <div class="module" style="flex: 1;">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">实时告警事件</span>
+            </div>
+            <div class="module-body">
+                <div class="data-list">
+                    <div class="data-item">
+                        <div class="data-item-left">
+                            <div class="data-icon red">!</div>
+                            <div class="data-info">
+                                <span class="data-name">压力超限告警</span>
+                                <span class="data-desc">球罐 A-005 压力异常</span>
+                            </div>
+                        </div>
+                        <span class="data-value danger">1.15MPa</span>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-item-left">
+                            <div class="data-icon orange">⚠</div>
+                            <div class="data-info">
+                                <span class="data-name">温度异常预警</span>
+                                <span class="data-desc">传感器 S-002 温度升高</span>
+                            </div>
+                        </div>
+                        <span class="data-value warning">45.2℃</span>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-item-left">
+                            <div class="data-icon orange">⚠</div>
+                            <div class="data-info">
+                                <span class="data-name">设备离线预警</span>
+                                <span class="data-desc">球罐 A-002 通信中断</span>
+                            </div>
+                        </div>
+                        <span class="data-value warning">30min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧面板 -->
+    <div class="right-panel">
+        <!-- 设备总览 -->
+        <div class="module">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">设备状态总览</span>
+            </div>
+            <div class="module-body">
+                <div class="stat-grid">
+                    <div class="stat-card blue">
+                        <div class="stat-value blue">19</div>
+                        <div class="stat-label">设备总数</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-value green">16</div>
+                        <div class="stat-label">正常运行</div>
+                    </div>
+                    <div class="stat-card orange">
+                        <div class="stat-value orange">2</div>
+                        <div class="stat-label">预警设备</div>
+                    </div>
+                    <div class="stat-card red">
+                        <div class="stat-value red">1</div>
+                        <div class="stat-label">告警设备</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 视频监控 -->
+        <div class="module" style="flex: 1.5;">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">实时视频监控</span>
+            </div>
+            <div class="module-body" style="padding: 0;">
+                <div class="video-player" id="videoPlayer">
+                    <div class="video-player-header">
+                        <span class="video-dot live"></span>
+                        <span class="video-player-name" id="videoPlayerName">请选择罐体查看监控</span>
+                        <span class="video-player-time" id="videoPlayerTime">--:--:--</span>
+                    </div>
+                    <div class="video-player-screen">
+                        <div class="video-player-placeholder" id="videoPlaceholder">
+                            <div class="video-player-icon">🎥</div>
+                            <div class="video-player-tip">点击3D场景中的罐体查看实时监控</div>
+                        </div>
+                        <div class="video-player-content" id="videoContent" style="display: none;">
+                            <div class="video-simulation">
+                                <div class="camera-overlay">
+                                    <div class="camera-corner camera-tl">◈ CAM-<span id="camId">--</span></div>
+                                    <div class="camera-corner camera-tr">REC ●</div>
+                                    <div class="camera-corner camera-bl">球罐 <span id="tankName">--</span></div>
+                                    <div class="camera-corner camera-br" id="camTime">00:00:00</div>
+                                    <div class="camera-grid">
+                                        <div class="grid-line grid-h"></div>
+                                        <div class="grid-line grid-v"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 环境监测 -->
+        <div class="module" style="flex: 1;">
+            <div class="module-header">
+                <div class="module-icon">◈</div>
+                <span class="module-title">环境参数监测</span>
+            </div>
+            <div class="module-body">
+                <div class="stat-grid" style="margin-bottom: 16px;">
+                    <div class="stat-card blue">
+                        <div class="stat-value blue">25.6℃</div>
+                        <div class="stat-label">大气温度</div>
+                    </div>
+                    <div class="stat-card green">
+                        <div class="stat-value green">58%</div>
+                        <div class="stat-label">大气湿度</div>
+                    </div>
+                </div>
+                <div class="data-item">
+                    <div class="data-item-left">
+                        <div class="data-icon green">🌬</div>
+                        <div class="data-info">
+                            <span class="data-name">风速</span>
+                        </div>
+                    </div>
+                    <span class="data-value">3.2 m/s</span>
+                </div>
+                <div class="data-item">
+                    <div class="data-item-left">
+                        <div class="data-icon green">📊</div>
+                        <div class="data-info">
+                            <span class="data-name">大气压力</span>
+                        </div>
+                    </div>
+                    <span class="data-value">101.3 kPa</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="bottom-nav">
+        <div class="nav-item">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">能耗分析</span>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon">🏭</div>
+            <span class="nav-label">园区总览</span>
+        </div>
+        <div class="nav-item">
+            <div class="nav-icon">🛡️</div>
+            <span class="nav-label">安防管理</span>
+        </div>
+    </nav>
+
+    <script>
+        // 更新时间
+        function updateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('headerTime').textContent = 
+                `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // Three.js 3D场景
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x020408);
+        scene.fog = new THREE.Fog(0x020408, 50, 200);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(60, 50, 60);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        // 控制器
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.maxPolarAngle = Math.PI / 2.2;
+        controls.minDistance = 30;
+        controls.maxDistance = 150;
+
+        // 灯光
+        const ambientLight = new THREE.AmbientLight(0x404040, 0.5);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
+
+        // 蓝色氛围光
+        const blueLight = new THREE.PointLight(0x00d4ff, 0.5, 100);
+        blueLight.position.set(0, 30, 0);
+        scene.add(blueLight);
+
+        // 地面网格
+        const gridHelper = new THREE.GridHelper(200, 50, 0x00d4ff, 0x003344);
+        gridHelper.material.opacity = 0.3;
+        gridHelper.material.transparent = true;
+        scene.add(gridHelper);
+
+        // 地面
+        const groundGeometry = new THREE.PlaneGeometry(200, 200);
+        const groundMaterial = new THREE.MeshBasicMaterial({ 
+            color: 0x020408,
+            transparent: true,
+            opacity: 0.8
+        });
+        const ground = new THREE.Mesh(groundGeometry, groundMaterial);
+        ground.rotation.x = -Math.PI / 2;
+        ground.position.y = -0.1;
+        scene.add(ground);
+
+        // 创建罐区建筑
+        const tankGroup = new THREE.Group();
+
+        // 中央控制室
+        const buildingGeo = new THREE.BoxGeometry(20, 12, 15);
+        const buildingMat = new THREE.MeshPhongMaterial({ 
+            color: 0x1a3a5c,
+            emissive: 0x001133,
+            emissiveIntensity: 0.3
+        });
+        const building = new THREE.Mesh(buildingGeo, buildingMat);
+        building.position.set(0, 6, 0);
+        building.castShadow = true;
+        tankGroup.add(building);
+
+        // 顶部发光环
+        const ringGeo = new THREE.TorusGeometry(8, 0.5, 8, 32);
+        const ringMat = new THREE.MeshBasicMaterial({ 
+            color: 0x00d4ff,
+            transparent: true,
+            opacity: 0.8
+        });
+        const ring = new THREE.Mesh(ringGeo, ringMat);
+        ring.rotation.x = -Math.PI / 2;
+        ring.position.set(0, 13, 0);
+        tankGroup.add(ring);
+
+        // 创建储罐
+        function createTank(x, z, height, radius, color, name, status) {
+            const tankGroup = new THREE.Group();
+            
+            // 罐体
+            const tankGeo = new THREE.CylinderGeometry(radius, radius, height, 32);
+            const tankMat = new THREE.MeshPhongMaterial({ 
+                color: color,
+                emissive: color,
+                emissiveIntensity: 0.2,
+                transparent: true,
+                opacity: 0.9
+            });
+            const tank = new THREE.Mesh(tankGeo, tankMat);
+            tank.position.y = height / 2;
+            tank.castShadow = true;
+            tankGroup.add(tank);
+
+            // 顶部
+            const topGeo = new THREE.SphereGeometry(radius, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const topMat = new THREE.MeshPhongMaterial({ 
+                color: color,
+                emissive: color,
+                emissiveIntensity: 0.3
+            });
+            const top = new THREE.Mesh(topGeo, topMat);
+            top.position.y = height;
+            tankGroup.add(top);
+
+            // 状态光环
+            const statusColor = status === 'danger' ? 0xff4757 : 
+                               status === 'warning' ? 0xffaa00 : 0x00ff88;
+            const glowGeo = new THREE.RingGeometry(radius + 1, radius + 2, 32);
+            const glowMat = new THREE.MeshBasicMaterial({ 
+                color: statusColor,
+                transparent: true,
+                opacity: 0.6,
+                side: THREE.DoubleSide
+            });
+            const glow = new THREE.Mesh(glowGeo, glowMat);
+            glow.rotation.x = -Math.PI / 2;
+            glow.position.y = 1;
+            tankGroup.add(glow);
+
+            // 标签
+            const labelDiv = document.createElement('div');
+            labelDiv.className = '3d-label';
+            labelDiv.textContent = name;
+            
+            tankGroup.position.set(x, 0, z);
+            tankGroup.userData = { name: name, status: status };
+            
+            return tankGroup;
+        }
+
+        // 添加储罐
+        const tanks = [
+            { x: -25, z: -20, h: 15, r: 6, color: 0x00d4ff, name: 'A-001', status: 'normal', camId: '01' },
+            { x: -25, z: 5, h: 15, r: 6, color: 0xffaa00, name: 'A-002', status: 'warning', camId: '02' },
+            { x: -25, z: 30, h: 15, r: 6, color: 0x00d4ff, name: 'A-003', status: 'normal', camId: '03' },
+            { x: 25, z: -20, h: 15, r: 6, color: 0x00d4ff, name: 'A-004', status: 'normal', camId: '04' },
+            { x: 25, z: 5, h: 15, r: 6, color: 0xff4757, name: 'A-005', status: 'danger', camId: '05' },
+            { x: 25, z: 30, h: 15, r: 6, color: 0x00d4ff, name: 'A-006', status: 'normal', camId: '06' },
+            { x: 0, z: -35, h: 12, r: 5, color: 0x00ff88, name: 'S-001', status: 'normal', camId: '07' },
+            { x: 0, z: 45, h: 12, r: 5, color: 0x00ff88, name: 'S-002', status: 'normal', camId: '08' },
+        ];
+
+        tanks.forEach(t => {
+            const tank = createTank(t.x, t.z, t.h, t.r, t.color, t.name, t.status);
+            tank.userData.camId = t.camId;
+            tankGroup.add(tank);
+        });
+
+        // 管道连接
+        const pipePath = new THREE.CatmullRomCurve3([
+            new THREE.Vector3(-25, 8, -20),
+            new THREE.Vector3(-15, 8, -10),
+            new THREE.Vector3(0, 8, 0),
+            new THREE.Vector3(15, 8, -10),
+            new THREE.Vector3(25, 8, -20),
+        ]);
+        const pipeGeo = new THREE.TubeGeometry(pipePath, 64, 0.8, 8, false);
+        const pipeMat = new THREE.MeshPhongMaterial({ 
+            color: 0x4488aa,
+            emissive: 0x002244,
+            emissiveIntensity: 0.4
+        });
+        const pipe = new THREE.Mesh(pipeGeo, pipeMat);
+        tankGroup.add(pipe);
+
+        scene.add(tankGroup);
+
+        // 粒子效果
+        const particleCount = 200;
+        const particleGeo = new THREE.BufferGeometry();
+        const particlePositions = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount * 3; i += 3) {
+            particlePositions[i] = (Math.random() - 0.5) * 150;
+            particlePositions[i + 1] = Math.random() * 60;
+            particlePositions[i + 2] = (Math.random() - 0.5) * 150;
+        }
+        
+        particleGeo.setAttribute('position', new THREE.BufferAttribute(particlePositions, 3));
+        const particleMat = new THREE.PointsMaterial({
+            color: 0x00d4ff,
+            size: 0.5,
+            transparent: true,
+            opacity: 0.6
+        });
+        const particles = new THREE.Points(particleGeo, particleMat);
+        scene.add(particles);
+
+        // 鼠标交互 - 悬停提示
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        const floatingLabel = document.getElementById('floatingLabel');
+
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(tankGroup.children, true);
+
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && obj.parent !== tankGroup) {
+                    obj = obj.parent;
+                }
+                
+                if (obj.userData && obj.userData.name) {
+                    floatingLabel.style.left = event.clientX + 15 + 'px';
+                    floatingLabel.style.top = event.clientY + 15 + 'px';
+                    floatingLabel.querySelector('.label-title').textContent = '球罐 ' + obj.userData.name;
+                    floatingLabel.classList.add('show');
+                    document.body.style.cursor = 'pointer';
+                }
+            } else {
+                floatingLabel.classList.remove('show');
+                document.body.style.cursor = 'default';
+            }
+        }
+
+        window.addEventListener('mousemove', onMouseMove);
+
+        // 点击罐体切换监控
+        const videoPlaceholder = document.getElementById('videoPlaceholder');
+        const videoContent = document.getElementById('videoContent');
+        const videoPlayerName = document.getElementById('videoPlayerName');
+        const camId = document.getElementById('camId');
+        const tankName = document.getElementById('tankName');
+        const camTime = document.getElementById('camTime');
+
+        function onClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(tankGroup.children, true);
+
+            if (intersects.length > 0) {
+                let obj = intersects[0].object;
+                while (obj.parent && obj.parent !== tankGroup) {
+                    obj = obj.parent;
+                }
+                
+                if (obj.userData && obj.userData.name) {
+                    // 切换监控视频
+                    videoPlaceholder.style.display = 'none';
+                    videoContent.style.display = 'block';
+                    videoPlayerName.textContent = obj.userData.name + ' 实时监控';
+                    camId.textContent = obj.userData.camId;
+                    tankName.textContent = obj.userData.name;
+                    
+                    // 高亮选中的罐体
+                    tankGroup.children.forEach(child => {
+                        if (child.userData && child.userData.name) {
+                            const glow = child.children[2];
+                            if (glow) {
+                                glow.material.opacity = child === obj ? 0.9 : 0.4;
+                            }
+                        }
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('click', onClick);
+
+        // 监控视频时间更新
+        function updateCamTime() {
+            const now = new Date();
+            const timeStr = String(now.getHours()).padStart(2, '0') + ':' + 
+                           String(now.getMinutes()).padStart(2, '0') + ':' + 
+                           String(now.getSeconds()).padStart(2, '0');
+            camTime.textContent = timeStr;
+        }
+        setInterval(updateCamTime, 1000);
+        updateCamTime();
+
+        // 动画循环
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            // 旋转光环
+            ring.rotation.z += 0.01;
+            
+            // 粒子动画
+            const positions = particles.geometry.attributes.position.array;
+            for (let i = 1; i < positions.length; i += 3) {
+                positions[i] += 0.05;
+                if (positions[i] > 60) {
+                    positions[i] = 0;
+                }
+            }
+            particles.geometry.attributes.position.needsUpdate = true;
+            
+            // 储罐发光动画
+            tankGroup.children.forEach((child, index) => {
+                if (child.userData && child.userData.status) {
+                    const glow = child.children[2];
+                    if (glow) {
+                        glow.material.opacity = 0.4 + Math.sin(Date.now() * 0.003 + index) * 0.2;
+                    }
+                }
+            });
+            
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // 窗口调整
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 底部导航切换
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
