@@ -9,6 +9,106 @@ const AppConfig = {
     updateInterval: 5000, // 数据刷新间隔(ms)
 };
 
+// 主题管理
+const Theme = {
+    currentTheme: 'dark', // 'dark', 'light', 'auto'
+    
+    // 初始化主题
+    init() {
+        // 从本地存储读取主题设置
+        const savedTheme = localStorage.getItem('app-theme') || 'dark';
+        this.setTheme(savedTheme);
+        this.renderSwitcher();
+        this.bindEvents();
+    },
+    
+    // 设置主题
+    setTheme(theme) {
+        this.currentTheme = theme;
+        
+        if (theme === 'auto') {
+            // 自动模式：根据系统偏好设置
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+        } else {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+        
+        // 保存到本地存储
+        localStorage.setItem('app-theme', theme);
+        
+        // 更新切换器状态
+        this.updateSwitcherUI();
+    },
+    
+    // 获取当前主题
+    getTheme() {
+        return this.currentTheme;
+    },
+    
+    // 渲染主题切换器
+    renderSwitcher() {
+        const headerRight = document.querySelector('.header-right');
+        if (!headerRight || headerRight.querySelector('.theme-switcher')) return;
+        
+        const switcherHTML = `
+            <div class="theme-switcher header-theme-switcher">
+                <button class="theme-switcher-btn" data-theme="dark" title="深色主题">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button class="theme-switcher-btn" data-theme="light" title="浅色主题">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        `;
+        
+        // 插入到header-right的最前面
+        headerRight.insertAdjacentHTML('afterbegin', switcherHTML);
+        this.updateSwitcherUI();
+    },
+    
+    // 更新切换器UI状态
+    updateSwitcherUI() {
+        document.querySelectorAll('.theme-switcher-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.theme === this.currentTheme) {
+                btn.classList.add('active');
+            }
+        });
+    },
+    
+    // 绑定事件
+    bindEvents() {
+        // 主题按钮点击事件
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.theme-switcher-btn');
+            if (btn) {
+                const theme = btn.dataset.theme;
+                this.setTheme(theme);
+            }
+        });
+        
+        // 监听系统主题变化
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (this.currentTheme === 'auto') {
+                document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+            }
+        });
+    }
+};
+
 // 工具函数
 const Utils = {
     // 格式化日期时间
@@ -703,7 +803,10 @@ const Charts = {
 
 // 初始化
 document.addEventListener('DOMContentLoaded', () => {
-    // 检查登录
+    // 初始化主题（所有页面都初始化）
+    Theme.init();
+    
+    // 检查登录（登录页除外）
     if (!Auth.isLoggedIn() && !window.location.pathname.includes('login.html')) {
         window.location.href = 'login.html';
         return;
@@ -759,5 +862,6 @@ window.App = {
     modal: Modal,
     toast: Toast,
     table: Table,
-    charts: Charts
+    charts: Charts,
+    theme: Theme
 };

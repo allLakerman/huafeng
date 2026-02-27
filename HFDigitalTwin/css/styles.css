@@ -1,6 +1,9 @@
 /* 华峰石化数字孪生平台 - 公共样式文件 */
 /* ========================================= */
 
+/* ===== 主题变量定义 ===== */
+
+/* 深色主题 (默认) */
 :root {
     /* 主色调 */
     --primary-color: #00d4ff;
@@ -8,13 +11,13 @@
     --primary-light: #33ddff;
     --secondary-color: #00ff88;
     --secondary-dark: #00cc6a;
-    
+
     /* 状态色 */
     --success-color: #00ff88;
     --warning-color: #ffaa00;
     --danger-color: #ff4757;
     --info-color: #00d4ff;
-    
+
     /* 背景色 */
     --bg-dark: #0a0e17;
     --bg-darker: #050810;
@@ -22,25 +25,26 @@
     --bg-card-hover: #1a2234;
     --bg-card-active: #1e2a40;
     --bg-overlay: rgba(17, 24, 39, 0.95);
-    
+
     /* 边框色 */
     --border-color: #1e3a5f;
     --border-light: #2a4a70;
     --border-focus: #00d4ff;
-    
+
     /* 文字色 */
     --text-primary: #ffffff;
     --text-secondary: #8b9dc3;
     --text-muted: #5a6a8a;
     --text-disabled: #3a4a6a;
-    
+
     /* 阴影 */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
     --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
     --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
     --shadow-glow: 0 0 20px rgba(0, 212, 255, 0.3);
     --shadow-glow-strong: 0 0 30px rgba(0, 212, 255, 0.5);
-    
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.3);
+
     /* 间距 */
     --spacing-xs: 4px;
     --spacing-sm: 8px;
@@ -48,27 +52,331 @@
     --spacing-lg: 24px;
     --spacing-xl: 32px;
     --spacing-xxl: 48px;
-    
+
     /* 圆角 */
     --radius-sm: 4px;
     --radius-md: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
     --radius-full: 9999px;
-    
+
     /* 过渡 */
     --transition-fast: 0.15s ease;
     --transition-normal: 0.3s ease;
     --transition-slow: 0.5s ease;
-    
+
     /* 字体 */
     --font-family: 'Noto Sans SC', 'Microsoft YaHei', 'PingFang SC', sans-serif;
     --font-mono: 'JetBrains Mono', 'Consolas', monospace;
-    
+
     /* 导航 */
     --sidebar-width: 260px;
     --sidebar-collapsed: 70px;
     --header-height: 64px;
+}
+
+/* 浅色主题 */
+[data-theme="light"] {
+    /* 主色调 - 调整为更明亮的蓝色 */
+    --primary-color: #0066cc;
+    --primary-dark: #0052a3;
+    --primary-light: #0080ff;
+    --secondary-color: #00aa66;
+    --secondary-dark: #008850;
+
+    /* 状态色 - 调整为更鲜明的颜色 */
+    --success-color: #22c55e;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --info-color: #3b82f6;
+
+    /* 背景色 - 浅色背景 */
+    --bg-dark: #f5f7fa;
+    --bg-darker: #eef2f6;
+    --bg-card: #ffffff;
+    --bg-card-hover: #f8fafc;
+    --bg-card-active: #f1f5f9;
+    --bg-overlay: rgba(255, 255, 255, 0.98);
+
+    /* 边框色 - 浅色边框 */
+    --border-color: #e2e8f0;
+    --border-light: #cbd5e1;
+    --border-focus: #3b82f6;
+
+    /* 文字色 - 深色文字 */
+    --text-primary: #1e293b;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-disabled: #cbd5e1;
+
+    /* 阴影 - 更柔和的阴影 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.12);
+    --shadow-glow: 0 0 20px rgba(59, 130, 246, 0.2);
+    --shadow-glow-strong: 0 0 30px rgba(59, 130, 246, 0.3);
+    --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+/* 浅色主题下需要覆盖的背景效果 */
+[data-theme="light"] .bg-effects::before {
+    background: 
+        radial-gradient(ellipse at 20% 20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(34, 197, 94, 0.05) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.03) 0%, transparent 70%);
+}
+
+[data-theme="light"] .grid-overlay {
+    background-image: 
+        linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+}
+
+/* 浅色主题下的滚动条 */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 浅色主题下的输入框 */
+[data-theme="light"] .input,
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-textarea {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .input:focus,
+[data-theme="light"] .form-input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* 浅色主题下的卡片 */
+[data-theme="light"] .card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.9));
+    box-shadow: var(--shadow-card);
+}
+
+[data-theme="light"] .card-header {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* 浅色主题下的表格 */
+[data-theme="light"] .table th {
+    background: rgba(0, 0, 0, 0.03);
+    color: #64748b;
+}
+
+[data-theme="light"] .table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="light"] .table tbody tr.selected {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* 浅色主题下的侧边栏 */
+[data-theme="light"] .app-sidebar {
+    background: rgba(255, 255, 255, 0.98);
+    border-right-color: var(--border-color);
+}
+
+[data-theme="light"] .sidebar-nav-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .sidebar-nav-item.active {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* 浅色主题下的头部 */
+[data-theme="light"] .app-header {
+    background: rgba(255, 255, 255, 0.98);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="light"] .header-user:hover {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* 浅色主题下的按钮 */
+[data-theme="light"] .btn {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .btn-primary {
+    color: white;
+}
+
+[data-theme="light"] .btn-primary:hover {
+    color: white;
+}
+
+/* 浅色主题下的下拉菜单 */
+[data-theme="light"] .dropdown-menu {
+    background: white;
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="light"] .dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* 浅色主题下的模态框 */
+[data-theme="light"] .modal-overlay {
+    background: rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .modal {
+    background: white;
+}
+
+[data-theme="light"] .modal-header {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .modal-close {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* 浅色主题下的进度条背景 */
+[data-theme="light"] .progress {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+/* 浅色主题下的统计卡片 */
+[data-theme="light"] .stat-card,
+[data-theme="light"] .overview-card,
+[data-theme="light"] .quick-action,
+[data-theme="light"] .chart-card,
+[data-theme="light"] .list-card {
+    background: white;
+}
+
+[data-theme="light"] .stat-card:hover,
+[data-theme="light"] .overview-card:hover,
+[data-theme="light"] .quick-action:hover {
+    border-color: var(--primary-color);
+}
+
+/* 浅色主题下的标签页 */
+[data-theme="light"] .tabs {
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="light"] .tab.active {
+    border-bottom-color: var(--primary-color);
+}
+
+/* 浅色主题下的设置项 */
+[data-theme="light"] .settings-item {
+    background: white;
+}
+
+/* 浅色主题下的列表项 */
+[data-theme="light"] .list-item:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="light"] .list-item-icon {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* 浅色主题下的登录页 */
+[data-theme="light"] .login-bg {
+    background: 
+        radial-gradient(ellipse at 30% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 80%, rgba(34, 197, 94, 0.08) 0%, transparent 50%),
+        var(--bg-dark);
+}
+
+[data-theme="light"] .login-card {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* 浅色主题下的加载动画 */
+[data-theme="light"] .spinner {
+    border-color: #e2e8f0;
+}
+
+/* 浅色主题下的图标按钮 */
+[data-theme="light"] .icon-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* 浅色主题下的空状态 */
+[data-theme="light"] .empty-state-icon {
+    color: #cbd5e1;
+}
+
+/* ===== 主题切换组件样式 ===== */
+.theme-switcher {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+}
+
+[data-theme="light"] .theme-switcher {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+.theme-switcher-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    position: relative;
+}
+
+.theme-switcher-btn:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="light"] .theme-switcher-btn:hover {
+    background: #e2e8f0;
+}
+
+.theme-switcher-btn.active {
+    background: #dc2626;
+    color: white;
+}
+
+[data-theme="light"] .theme-switcher-btn.active {
+    background: #dc2626;
+    color: white;
+}
+
+.theme-switcher-btn svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* 头部中的主题切换器位置 */
+.header-theme-switcher {
+    margin-right: var(--spacing-sm);
 }
 
 /* 全局重置 */
@@ -1828,4 +2136,837 @@ a:hover {
 
 .settings-item-action {
     flex-shrink: 0;
+}
+
+/* ===== 浅色主题页面特定元素适配 ===== */
+
+/* 通用深色背景元素覆盖 */
+[data-theme="light"] [class*="sidebar"],
+[data-theme="light"] [class*="panel"],
+[data-theme="light"] [class*="card"] {
+    background: var(--bg-card);
+}
+
+/* 分析页面 */
+[data-theme="light"] .analysis-filters,
+[data-theme="light"] .analysis-card,
+[data-theme="light"] .data-table-card {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .analysis-card-header,
+[data-theme="light"] .data-table-header,
+[data-theme="light"] .stats-row {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .filter-select,
+[data-theme="light"] .date-input {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .quick-date {
+    background: #f1f5f9;
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .quick-date:hover,
+[data-theme="light"] .quick-date.active {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="light"] .page-btn {
+    background: #f1f5f9;
+}
+
+/* 罐区监控页面 */
+[data-theme="light"] .monitoring-sidebar,
+[data-theme="light"] .view-3d-container {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .tank-select,
+[data-theme="light"] .sensor-value {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .device-item {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .device-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .device-item.selected {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .alarm-list-item:hover {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+/* 设备管理页面 */
+[data-theme="light"] .equipment-sidebar,
+[data-theme="light"] .equipment-detail {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .search-input,
+[data-theme="light"] .tree-search {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .tree-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .tree-item.selected {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .detail-section,
+[data-theme="light"] .metric-card {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* 视频监控页面 */
+[data-theme="light"] .video-sidebar,
+[data-theme="light"] .video-main-panel {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .video-sidebar-header,
+[data-theme="light"] .video-toolbar {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .camera-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .camera-item.selected {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .video-grid-selector {
+    background: #f1f5f9;
+}
+
+[data-theme="light"] .video-player {
+    background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .video-player-placeholder {
+    color: #94a3b8;
+}
+
+[data-theme="light"] .video-player-label,
+[data-theme="light"] .video-player-status {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .playback-controls {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+/* 实景漫游页面 */
+[data-theme="light"] .roaming-sidebar,
+[data-theme="light"] .roaming-info-panel,
+[data-theme="light"] .roaming-toolbar {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .poi-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .view-3d {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+}
+
+/* 设置页面 */
+[data-theme="light"] .settings-nav,
+[data-theme="light"] .settings-section {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .settings-section-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .settings-nav-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .settings-nav-item.active {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-textarea {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .user-row:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="light"] .user-role {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+/* 首页概览 */
+[data-theme="light"] .overview-card,
+[data-theme="light"] .quick-action,
+[data-theme="light"] .chart-card,
+[data-theme="light"] .list-card {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .chart-card-header,
+[data-theme="light"] .list-card-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .overview-card-icon.blue {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+}
+
+[data-theme="light"] .overview-card-icon.green {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+}
+
+[data-theme="light"] .overview-card-icon.orange {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+}
+
+[data-theme="light"] .overview-card-icon.red {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+}
+
+[data-theme="light"] .quick-action:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+/* 统计卡片 */
+[data-theme="light"] .stat-card {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .stat-icon.primary {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+}
+
+[data-theme="light"] .stat-icon.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+}
+
+[data-theme="light"] .stat-icon.warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+}
+
+[data-theme="light"] .stat-icon.danger {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+}
+
+/* 数据大屏 */
+[data-theme="light"] .dashboard-container {
+    background: #f1f5f9;
+}
+
+[data-theme="light"] .dashboard-header {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .dashboard-card {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .dashboard-value {
+    text-shadow: none;
+}
+
+/* 通用深色背景覆盖 */
+[data-theme="light"] [style*="background: linear-gradient(135deg, rgba(17, 24, 39"],
+[data-theme="light"] [style*="background: rgba(17, 24, 39"],
+[data-theme="light"] [style*="background: rgba(10, 14, 23"],
+[data-theme="light"] [style*="background: rgba(5, 8, 16"] {
+    background: var(--bg-card) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.3)"],
+[data-theme="light"] [style*="background: rgba(0, 0, 0, 0.2)"] {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* 设备管理页面补充 */
+[data-theme="light"] .equipment-table-card {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .table-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .filter-tag {
+    background: #f1f5f9;
+}
+
+[data-theme="light"] .filter-tag:hover,
+[data-theme="light"] .filter-tag.active {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="light"] .stat-icon-box.primary {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(59, 130, 246, 0.1));
+}
+
+[data-theme="light"] .stat-icon-box.success {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
+}
+
+[data-theme="light"] .stat-icon-box.warning {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(245, 158, 11, 0.1));
+}
+
+[data-theme="light"] .stat-icon-box.danger {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(239, 68, 68, 0.1));
+}
+
+/* 实景漫游页面补充 */
+[data-theme="light"] .roaming-control-panel {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .panel-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .mode-card {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .mode-card:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .mode-card.active {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .mode-icon {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="light"] .mode-status {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="light"] .roaming-view-container {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .view-controls-bar {
+    background: rgba(255, 255, 255, 0.95);
+}
+
+[data-theme="light"] .poi-marker {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+/* 登录页补充 */
+[data-theme="light"] .login-visual {
+    background: linear-gradient(135deg, rgba(0, 60, 120, 0.9), rgba(0, 40, 80, 0.95));
+}
+
+[data-theme="light"] .login-visual-logo {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(34, 197, 94, 0.2));
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+[data-theme="light"] .login-feature-icon {
+    background: rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="light"] .login-input .input {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .login-captcha-img {
+    background: #f1f5f9;
+    color: var(--primary-color);
+}
+
+/* 更多通用深色背景覆盖 */
+[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.05)"] {
+    background: rgba(0, 0, 0, 0.03) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(255, 255, 255, 0.03)"] {
+    background: rgba(0, 0, 0, 0.02) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 212, 255, 0.05)"] {
+    background: rgba(59, 130, 246, 0.05) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 212, 255, 0.08)"] {
+    background: rgba(59, 130, 246, 0.08) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 212, 255, 0.1)"] {
+    background: rgba(59, 130, 246, 0.1) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 212, 255, 0.12)"] {
+    background: rgba(59, 130, 246, 0.12) !important;
+}
+
+[data-theme="light"] [style*="background: rgba(0, 212, 255, 0.15)"] {
+    background: rgba(59, 130, 246, 0.15) !important;
+}
+
+/* 图表样式适配 */
+[data-theme="light"] .chart-bar {
+    background: linear-gradient(180deg, var(--primary-color), rgba(59, 130, 246, 0.3));
+}
+
+/* ===== 设备管理页面补充 ===== */
+[data-theme="light"] .equipment-stat {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .tree-count {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .search-input {
+    background: #f8fafc;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .search-input::placeholder {
+    color: #94a3b8;
+}
+
+/* ===== 视频监控页面补充 ===== */
+[data-theme="light"] .video-window {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .video-window.selected {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+}
+
+[data-theme="light"] .video-window-label,
+[data-theme="light"] .video-window-status {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .video-action-btn {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .video-action-btn:hover {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+[data-theme="light"] .ptz-panel {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="light"] .ptz-btn {
+    background: #f1f5f9;
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .ptz-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+[data-theme="light"] .video-toolbar-bottom {
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ===== 实景漫游页面补充 ===== */
+[data-theme="light"] .roaming-viewer {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .viewer-header {
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] .viewer-content {
+    background: #f1f5f9;
+}
+
+[data-theme="light"] .viewer-status-item {
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .view-info,
+[data-theme="light"] .control-hints {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+}
+
+[data-theme="light"] .loading-spinner {
+    border-color: rgba(59, 130, 246, 0.2);
+    border-top-color: var(--primary-color);
+}
+
+[data-theme="light"] .control-btn.secondary {
+    background: #f1f5f9;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .control-btn.secondary:hover {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="light"] .control-btn.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="light"] .viewpoint-item {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .viewpoint-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+}
+
+[data-theme="light"] .viewpoint-item.active {
+    background: rgba(59, 130, 246, 0.12);
+}
+
+[data-theme="light"] .viewpoint-icon {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+[data-theme="light"] .speed-slider {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="light"] .speed-slider::-webkit-slider-thumb {
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+}
+
+/* ===== 表格和筛选标签补充 ===== */
+[data-theme="light"] .filter-tags {
+    background: rgba(0, 0, 0, 0.02);
+    border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .table th {
+    background: rgba(0, 0, 0, 0.03);
+    color: #64748b;
+    font-weight: 600;
+}
+
+[data-theme="light"] .table tbody tr:hover {
+    background: rgba(59, 130, 246, 0.05);
+}
+
+[data-theme="light"] .table-container {
+    background: var(--bg-card);
+}
+
+/* ===== 视频监控页面补充 ===== */
+[data-theme="light"] .video-info-bar {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+}
+
+[data-theme="light"] .video-info-item {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .ptz-btn {
+    background: #f1f5f9;
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .ptz-btn:hover {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: white;
+}
+
+[data-theme="light"] .ptz-center {
+    background: rgba(59, 130, 246, 0.1);
+}
+
+[data-theme="light"] .grid-btn {
+    color: #64748b;
+}
+
+[data-theme="light"] .grid-btn:hover {
+    color: var(--text-primary);
+    background: rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .grid-btn.active {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* ===== 设备管理页面树形结构 ===== */
+[data-theme="light"] .tree-item {
+    color: var(--text-secondary);
+}
+
+[data-theme="light"] .tree-item:hover {
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .tree-item.active {
+    background: rgba(59, 130, 246, 0.12);
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .tree-title {
+    color: #64748b;
+}
+
+[data-theme="light"] .tree-section {
+    border-bottom-color: var(--border-color);
+}
+
+/* ===== 通用按钮和图标按钮 ===== */
+[data-theme="light"] .icon-btn {
+    color: #64748b;
+}
+
+[data-theme="light"] .icon-btn:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
+}
+
+[data-theme="light"] .btn-sm {
+    background: #f1f5f9;
+    border-color: #e2e8f0;
+}
+
+[data-theme="light"] .btn-sm:hover {
+    background: rgba(59, 130, 246, 0.1);
+    border-color: var(--primary-color);
+}
+
+/* ===== 标签页 ===== */
+[data-theme="light"] .tab {
+    color: #64748b;
+}
+
+[data-theme="light"] .tab:hover {
+    color: var(--text-primary);
+}
+
+[data-theme="light"] .tab.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+}
+
+/* ===== 深色背景硬编码元素强制覆盖 ===== */
+[data-theme="light"] [class*="stat"][style*="background: linear-gradient"],
+[data-theme="light"] [class*="card"][style*="background: linear-gradient"] {
+    background: var(--bg-card) !important;
+}
+
+/* 针对截图中可见的深色卡片 */
+[data-theme="light"] .equipment-stats .equipment-stat,
+[data-theme="light"] .video-window,
+[data-theme="light"] .analysis-card,
+[data-theme="light"] .monitoring-sidebar,
+[data-theme="light"] .view-3d-container {
+    background: var(--bg-card) !important;
+}
+
+/* 漫游页面3D视图区域 - 保持深色因为3D内容通常需要深色背景 */
+[data-theme="light"] .viewer-content {
+    background: #0a0e17 !important;
+}
+
+/* 漫游页面控制面板 */
+[data-theme="light"] .control-hints,
+[data-theme="light"] .view-info {
+    background: rgba(255, 255, 255, 0.98) !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+[data-theme="light"] .view-info-label {
+    color: #64748b;
+}
+
+[data-theme="light"] .view-info-value {
+    color: var(--primary-color);
+}
+
+/* ===== 输入框和表单元素 ===== */
+[data-theme="light"] input[type="text"],
+[data-theme="light"] input[type="password"],
+[data-theme="light"] input[type="number"],
+[data-theme="light"] input[type="date"],
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+    color: var(--text-primary);
+}
+
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+    color: #94a3b8;
+}
+
+[data-theme="light"] input:focus,
+[data-theme="light"] select:focus,
+[data-theme="light"] textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+}
+
+/* ===== 头部状态信息 ===== */
+[data-theme="light"] .header-status {
+    background: rgba(34, 197, 94, 0.1);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="light"] .header-status-dot {
+    background: var(--success-color);
+}
+
+/* 标签/徽章样式 */
+[data-theme="light"] .badge {
+    font-weight: 600;
+}
+
+[data-theme="light"] .badge-success {
+    background: rgba(34, 197, 94, 0.15);
+}
+
+[data-theme="light"] .badge-warning {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="light"] .badge-danger {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="light"] .badge-info {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+/* 告警相关样式 */
+[data-theme="light"] .alarm-badge.danger {
+    background: rgba(239, 68, 68, 0.15);
+}
+
+[data-theme="light"] .alarm-badge.warning {
+    background: rgba(245, 158, 11, 0.15);
+}
+
+[data-theme="light"] .alarm-badge.info {
+    background: rgba(59, 130, 246, 0.15);
+}
+
+/* 设备状态样式 */
+[data-theme="light"] .status-tag {
+    font-weight: 600;
+}
+
+/* 工具提示样式 */
+[data-theme="light"] .tooltip::after {
+    background: var(--bg-card);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
+}
+
+/* 模态框相关内容 */
+[data-theme="light"] .modal-body {
+    background: var(--bg-card);
+}
+
+[data-theme="light"] .modal-footer {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+/* Toast通知适配 */
+[data-theme="light"] .toast {
+    box-shadow: var(--shadow-lg);
+}
+
+/* 加载动画 */
+[data-theme="light"] .loading-spinner {
+    border-color: #e2e8f0;
+    border-top-color: var(--primary-color);
+}
+
+/* 滚动条样式 */
+[data-theme="light"] ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 焦点样式 */
+[data-theme="light"] *:focus-visible {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+/* 禁用状态 */
+[data-theme="light"] :disabled,
+[data-theme="light"] [disabled] {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* 选择文字颜色 */
+[data-theme="light"] ::selection {
+    background: rgba(59, 130, 246, 0.3);
+    color: var(--text-primary);
 }
